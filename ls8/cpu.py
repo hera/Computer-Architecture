@@ -12,6 +12,7 @@ class CPU:
         self.ir = 0             # instruction register
         self.reg = [0] * 8
         self.working = False    # cpu is turned off by default
+        self.program = []
 
         self.instruction_table = {
             0b10000010: self.LDI,
@@ -55,23 +56,38 @@ class CPU:
     def load(self):
         """Load a program into memory."""
 
-        address = 0
+        # check if there's a file name
+        if len(sys.argv) < 2:
+            print("Error. Please provide a file name as a parameter")
+            quit()
 
-        # For now, we've just hardcoded a program:
+        path = sys.argv[1]
+        raw_program = []
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # read the file an save as a list of lines
+        try:
+            file = open(path)
+            raw_program = file.read().split("\n")
+            file.close()
+        except FileNotFoundError:
+            print("Error. File not found.")
+            quit()
+        
+        program = []
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        for line in raw_program:
+            operation = line.split("#")[0]
+            operation = operation.strip()
+            if len(operation):
+                program.append(int(operation, 2))
+
+        # check if the program can fit into ram
+        if len(program) > len(self.ram):
+            print("The program is too large. Please upgrade the RAM.")
+
+        # load the program into ram
+        for i in range(len(program)):
+            self.ram[i] = program[i]
 
 
     def alu(self, op, reg_a, reg_b):
@@ -121,4 +137,4 @@ class CPU:
 
                 self.pc += 1
             else:
-                raise Exception(f"Unsupported operation: {self.ir}")
+                raise Exception(f"Unsupported operation: {self.ir:08b}")
