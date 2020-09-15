@@ -17,7 +17,8 @@ class CPU:
         self.instruction_table = {
             0b10000010: self.LDI,
             0b00000001: self.HLT,
-            0b01000111: self.PRN
+            0b01000111: self.PRN,
+            0b10100010: self.MUL
         }
     
     # Set the value of a register to an integer
@@ -45,12 +46,31 @@ class CPU:
         print(data)
 
 
+    # Multiply the values in registers A and B and store the result in registerA.
+    def MUL(self):
+        self.pc += 1
+        location_a = self.ram_read(self.pc)
+
+        self.pc += 1
+        location_b = self.ram_read(self.pc)
+
+        self.alu("MUL", location_a, location_b)
+
+
     def ram_read(self, address):
         return self.ram[address]
     
 
     def ram_write(self, address, data):
         self.ram[address] = data
+
+
+    def reg_read(self, address):
+        return self.reg[address]
+
+
+    def reg_write(self, address, data):
+        self.reg[address] = data
 
 
     def load(self):
@@ -95,7 +115,8 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
