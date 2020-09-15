@@ -27,7 +27,7 @@ class CPU:
         self.pc += 1
         data = self.ram_read(self.pc)
 
-        self.ram_write(location, data)
+        self.reg[location] = data
 
     # Halt the CPU
     def HLT(self):
@@ -39,7 +39,7 @@ class CPU:
         self.pc += 1
 
         location = self.ram_read(self.pc)
-        data = self.ram_read(location)
+        data = self.reg[location]
 
         print(data)
 
