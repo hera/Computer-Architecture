@@ -7,20 +7,44 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.ram = [0] * 256    # RAM storage
-        self.pc = 0             # program counter
-        self.ir = 0             # instruction register
+        self.ram = [0] * 256        # RAM storage
+        self.pc = 0                 # program counter
+        self.ir = 0                 # instruction register
         self.reg = [0] * 8
-        self.working = False    # cpu is turned off by default
-        self.program = []
+        self.working = False        # cpu is turned off by default
+        self.sp = 7                 # the location in the IR that has a link to where the stack begins
+
+        self.reg[self.sp] = 0xF4    # set the location in ram where the stack begins
 
         self.instruction_table = {
             0b10000010: self.LDI,
             0b00000001: self.HLT,
             0b01000111: self.PRN,
-            0b10100010: self.MUL
+            0b10100010: self.MUL,
+            0b01000101: self.PUSH,
+            0b01000110: self.POP
         }
-    
+
+    def PUSH(self):
+        self.reg[self.sp] -= 1 # decrement the stack pointer
+
+        self.pc += 1  # update the program counter
+
+        address = self.ram_read(self.pc) # from which instruction register I must take the value from
+        data = self.reg[address] # get the value from the register
+
+        # push the value on the stack
+        self.ram[self.reg[self.sp]] = data
+
+    def POP(self):
+        self.pc += 1
+        copy_to = self.ram_read(self.pc)
+
+        value = self.ram_read(self.reg[self.sp])
+        self.reg[copy_to] = value
+
+        self.reg[self.sp] += 1
+ 
     # Set the value of a register to an integer
     def LDI(self):
         self.pc += 1
