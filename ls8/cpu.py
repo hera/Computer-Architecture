@@ -21,9 +21,31 @@ class CPU:
             0b00000001: self.HLT,
             0b01000111: self.PRN,
             0b10100010: self.MUL,
+            0b10100000: self.ADD,
             0b01000101: self.PUSH,
-            0b01000110: self.POP
+            0b01000110: self.POP,
+            0b01010000: self.CALL,
+            0b00010001: self.RET
         }
+        
+    def CALL(self):
+        self.pc += 1
+
+        # save the next operation in stack
+        self.reg[self.sp] -= 1
+        self.ram[self.reg[self.sp]] = self.pc + 1
+
+        # go to the subroutine
+        self.pc = self.reg[self.ram_read(self.pc)]
+
+    
+    def RET(self):
+        
+        next_address = self.ram_read(self.reg[self.sp])
+        self.reg[self.sp] += 1
+
+        self.pc = next_address
+
 
     def PUSH(self):
         self.reg[self.sp] -= 1 # decrement the stack pointer
@@ -39,6 +61,8 @@ class CPU:
 
         value = self.ram_read(self.reg[self.sp])
         self.reg[copy_to] = value
+
+        self.reg[self.sp] += 1
  
     # Set the value of a register to an integer
     def LDI(self):
@@ -67,7 +91,13 @@ class CPU:
         location_b = self.ram_read(self.pc + 2)
 
         self.alu("MUL", location_a, location_b)
+    
+    # Add the values in two registers and store the result in the first one
+    def ADD(self):
+        location_a = self.ram_read(self.pc + 1)
+        location_b = self.ram_read(self.pc + 2)
 
+        self.alu("ADD", location_a, location_b)
 
     def ram_read(self, address):
         return self.ram[address]
