@@ -28,30 +28,23 @@ class CPU:
     def PUSH(self):
         self.reg[self.sp] -= 1 # decrement the stack pointer
 
-        self.pc += 1  # update the program counter
-
-        address = self.ram_read(self.pc) # from which instruction register I must take the value from
+        address = self.ram_read(self.pc + 1) # from which instruction register I must take the value from
         data = self.reg[address] # get the value from the register
 
         # push the value on the stack
         self.ram[self.reg[self.sp]] = data
 
     def POP(self):
-        self.pc += 1
-        copy_to = self.ram_read(self.pc)
+        copy_to = self.ram_read(self.pc + 1)
 
         value = self.ram_read(self.reg[self.sp])
         self.reg[copy_to] = value
-
-        self.reg[self.sp] += 1
  
     # Set the value of a register to an integer
     def LDI(self):
-        self.pc += 1
-        location = self.ram_read(self.pc)
+        location = self.ram_read(self.pc + 1)
 
-        self.pc += 1
-        data = self.ram_read(self.pc)
+        data = self.ram_read(self.pc + 2)
 
         self.reg[location] = data
 
@@ -62,9 +55,7 @@ class CPU:
 
     # Print numeric value stored in the given register
     def PRN(self):
-        self.pc += 1
-
-        location = self.ram_read(self.pc)
+        location = self.ram_read(self.pc + 1)
         data = self.reg[location]
 
         print(data)
@@ -72,11 +63,8 @@ class CPU:
 
     # Multiply the values in registers A and B and store the result in registerA.
     def MUL(self):
-        self.pc += 1
-        location_a = self.ram_read(self.pc)
-
-        self.pc += 1
-        location_b = self.ram_read(self.pc)
+        location_a = self.ram_read(self.pc + 1)
+        location_b = self.ram_read(self.pc + 2)
 
         self.alu("MUL", location_a, location_b)
 
@@ -180,6 +168,10 @@ class CPU:
                 # call the handler
                 self.instruction_table[self.ir]()
 
-                self.pc += 1
+                sets_pc = self.ir >> 4 & 1 # get the 4th bit
+
+                if not sets_pc:
+                    num_operands = self.ir >> 6 # how many operands
+                    self.pc += num_operands + 1 # move the pointer to the address after operands
             else:
                 raise Exception(f"Unsupported operation: {self.ir:08b}")
